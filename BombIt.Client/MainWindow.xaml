@@ -1,0 +1,25 @@
+﻿<Window x:Class="BombIt.Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BombIt" Height="700" Width="900"
+        Focusable="True"
+        KeyDown="Window_KeyDown"
+        KeyUp="Window_KeyUp">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10">
+            <Button x:Name="ConnectButton"
+                    Content="Connect to server"
+                    Width="200" Height="40"
+                    Click="ConnectButton_Click"/>
+            <TextBlock x:Name="StatusText"
+                       Text="Not connected"
+                       Margin="20,0,0,0"
+                       VerticalAlignment="Center"
+                       FontSize="16"/>
+        </StackPanel>
+        <Canvas x:Name="MapCanvas"
+                Background="Black"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+    </DockPanel>
+</Window>

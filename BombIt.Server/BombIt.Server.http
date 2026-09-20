@@ -1,0 +1,6 @@
+@BombIt.Server_HostAddress = http://localhost:5071
+
+GET {{BombIt.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
