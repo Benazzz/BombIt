@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
   <Project Path="BombIt.Client/BombIt.Client.csproj" />
   <Project Path="BombIt.Server/BombIt.Server.csproj" />
   <Project Path="BombIt.Shared/BombIt.Shared.csproj" />
