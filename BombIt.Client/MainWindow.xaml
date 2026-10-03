@@ -1,25 +1,55 @@
-﻿<Window x:Class="BombIt.Client.MainWindow"
+<Window x:Class="BombIt.Client.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="BombIt" Height="700" Width="900"
         Focusable="True"
         KeyDown="Window_KeyDown"
         KeyUp="Window_KeyUp">
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10">
-            <Button x:Name="ConnectButton"
-                    Content="Connect to server"
-                    Width="200" Height="40"
-                    Click="ConnectButton_Click"/>
-            <TextBlock x:Name="StatusText"
-                       Text="Not connected"
-                       Margin="20,0,0,0"
-                       VerticalAlignment="Center"
-                       FontSize="16"/>
+    <Grid>
+        <!-- Game Area -->
+        <Canvas x:Name="MapCanvas" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden"/>
+        
+        <!-- UI Overlay -->
+        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10">
+            <Button x:Name="ConnectButton" Content="Connect to server" Width="200" Height="40" Click="ConnectButton_Click"/>
+            <TextBlock x:Name="StatusText" Text="Not connected" Margin="0,10,0,0" FontSize="16"/>
         </StackPanel>
-        <Canvas x:Name="MapCanvas"
-                Background="Black"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"/>
-    </DockPanel>
+
+        <!-- Lobby Panel -->
+        <Border x:Name="LobbyPanel" Background="#FF1E1E1E" Visibility="Hidden">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="LOBBY" Foreground="White" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                <TextBlock x:Name="PlayersListText" Foreground="White" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                
+                <StackPanel x:Name="HostSettingsPanel" Visibility="Collapsed" Margin="0,0,0,20">
+                    <TextBlock Text="Match Time (Seconds):" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <Slider x:Name="TimeSlider" Minimum="60" Maximum="300" Value="220" TickFrequency="10" IsSnapToTickEnabled="True" Width="200" ValueChanged="TimeSlider_ValueChanged"/>
+                    <TextBlock x:Name="TimeSliderLabel" Text="220 s" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <Button x:Name="StartGameButton" Content="START GAME (Host Only)" Width="250" Height="50" FontSize="18" Click="StartGameButton_Click" Visibility="Collapsed"/>
+                
+                <TextBlock x:Name="WaitingForHostText" Text="waiting for the host to start the game..." Foreground="LightGray" FontSize="14" HorizontalAlignment="Center" Visibility="Collapsed"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Countdown Panel -->
+        <Border x:Name="CountdownPanel" Background="#CC000000" Visibility="Hidden">
+            <TextBlock x:Name="CountdownText" Foreground="White" FontSize="100" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Death Panel -->
+        <Border x:Name="DeathPanel" Background="#CC770000" Visibility="Hidden">
+            <TextBlock Text="YOU DIED!" Foreground="White" FontSize="70" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Side Panel (Game Stats) -->
+        <Border x:Name="SidePanel" Background="#333333" Width="200" HorizontalAlignment="Right" Visibility="Hidden">
+            <StackPanel Margin="15">
+                <TextBlock Text="MATCH INFO" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <TextBlock Text="Time Left:" Foreground="LightGray" FontSize="16"/>
+                <TextBlock x:Name="TimeLeftText" Text="3:40" Foreground="White" FontSize="32" FontWeight="Bold" Margin="0,0,0,20"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </Window>
