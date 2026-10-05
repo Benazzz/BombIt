@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using BombIt.Shared.Commands;
 using BombIt.Shared.DTOs;
 using BombIt.Server.Game;
@@ -7,36 +7,37 @@ namespace BombIt.Server.Hubs;
 
 public class GameHub : Hub
 {
-    private readonly GameStateManager _gameStateManager;
-
-    public GameHub(GameStateManager gameStateManager)
-    {
-        _gameStateManager = gameStateManager;
-    }
+    private GameStateManager State => GameStateManager.Instance;
 
     public override async Task OnConnectedAsync()
     {
-        _gameStateManager.AddPlayer(Context.ConnectionId);
+        State.AddPlayer(Context.ConnectionId);
         Console.WriteLine($"Client connected: {Context.ConnectionId}");
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _gameStateManager.RemovePlayer(Context.ConnectionId);
+        State.RemovePlayer(Context.ConnectionId);
         Console.WriteLine($"Client disconnected: {Context.ConnectionId}");
         await base.OnDisconnectedAsync(exception);
     }
 
     public Task SendInput(PlayerInputCommand input)
     {
-        _gameStateManager.SetInput(Context.ConnectionId, input.Direction);
+        State.SetInput(Context.ConnectionId, input);
+        return Task.CompletedTask;
+    }
+
+    public Task StartGame(int timeSeconds)
+    {
+        State.StartGame(Context.ConnectionId, timeSeconds);
         return Task.CompletedTask;
     }
 
     public Task<MapDto> GetMap()
     {
-        var map = Game.Map.LoadDefault();
+        var map = State.GetMap();
         return Task.FromResult(map.ToDto());
     }
 }

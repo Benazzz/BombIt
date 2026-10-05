@@ -17,7 +17,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSingleton<GameStateManager>();
 builder.Services.AddHostedService<GameLoopService>();
 
 var app = builder.Build();

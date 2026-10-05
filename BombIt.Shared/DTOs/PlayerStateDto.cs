@@ -1,4 +1,4 @@
-﻿namespace BombIt.Shared.DTOs;
+namespace BombIt.Shared.DTOs;
 
 public class PlayerStateDto
 {
@@ -7,4 +7,5 @@ public class PlayerStateDto
     public double X { get; set; }
     public double Y { get; set; }
     public bool IsAlive { get; set; } = true;
+    public bool IsInvulnerable { get; set; }
 }

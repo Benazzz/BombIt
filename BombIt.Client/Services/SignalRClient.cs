@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
 using BombIt.Shared.Commands;
 using BombIt.Shared.DTOs;
 
@@ -14,7 +14,7 @@ public class SignalRClient
     public SignalRClient()
     {
         _connection = new HubConnectionBuilder()
-            .WithUrl("https://localhost:7039/gamehub")
+            .WithUrl("http://localhost:5071/gamehub")
             .WithAutomaticReconnect()
             .Build();
 
@@ -40,6 +40,14 @@ public class SignalRClient
         if (_connection.State == HubConnectionState.Connected)
         {
             await _connection.InvokeAsync("SendInput", input);
+        }
+    }
+
+    public async Task StartGameAsync(int timeSeconds)
+    {
+        if (_connection.State == HubConnectionState.Connected)
+        {
+            await _connection.InvokeAsync("StartGame", timeSeconds);
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using BombIt.Server.Hubs;
 using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
@@ -7,13 +7,11 @@ namespace BombIt.Server.Game;
 
 public class GameLoopService : BackgroundService
 {
-    private readonly GameStateManager _gameStateManager;
     private readonly IHubContext<GameHub> _hubContext;
     private const int TickRateMs = 1000 / 30; // ~33ms
 
-    public GameLoopService(GameStateManager gameStateManager, IHubContext<GameHub> hubContext)
+    public GameLoopService(IHubContext<GameHub> hubContext)
     {
-        _gameStateManager = gameStateManager;
         _hubContext = hubContext;
     }
 
@@ -21,14 +19,20 @@ public class GameLoopService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            _gameStateManager.Tick();
+            var stateManager = GameStateManager.Instance;
+            stateManager.Tick();
 
             var state = new GameStateDto
             {
-                Phase = GamePhase.Playing,
-                Players = _gameStateManager.GetAllPlayers()
-                    .Select(p => p.ToDto())
-                    .ToList()
+                Phase = stateManager.CurrentPhase,
+                HostConnectionId = stateManager.HostConnectionId,
+                CountdownValue = stateManager.CountdownTicks,
+                RoundTimeLeftSeconds = stateManager.RoundTimeLeftTicks / 30,
+                MapVersion = stateManager.MapVersion,
+                Players = stateManager.GetAllPlayers().Select(p => p.ToDto()).ToList(),
+                Bombs = stateManager.GetBombs().Select(b => b.ToDto()).ToList(),
+                Explosions = stateManager.GetExplosions().Select(e => e.ToDto()).ToList(),
+                PowerUps = stateManager.GetPowerUps().Select(p => p.ToDto()).ToList()
             };
 
             await _hubContext.Clients.All.SendAsync("ReceiveGameState", state, stoppingToken);
