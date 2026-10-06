@@ -3,7 +3,7 @@ using BombIt.Server.Hubs;
 using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 
-namespace BombIt.Server.Game;
+namespace BombIt.Server.Game.Services;
 
 public class GameLoopService : BackgroundService
 {
@@ -19,7 +19,7 @@ public class GameLoopService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var stateManager = GameStateManager.Instance;
+            var stateManager = GameStateManagerService.Instance;
             stateManager.Tick();
 
             var state = new GameStateDto

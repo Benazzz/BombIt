@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.SignalR;
 using BombIt.Shared.Commands;
 using BombIt.Shared.DTOs;
-using BombIt.Server.Game;
+using BombIt.Server.Game.Services;
 
 namespace BombIt.Server.Hubs;
 
 public class GameHub : Hub
 {
-    private GameStateManager State => GameStateManager.Instance;
+    private GameStateManagerService State => GameStateManagerService.Instance;
 
     public override async Task OnConnectedAsync()
     {
