@@ -8,4 +8,5 @@ public class PlayerStateDto
     public double Y { get; set; }
     public bool IsAlive { get; set; } = true;
     public bool IsInvulnerable { get; set; }
+    public int Score { get; set; }
 }
