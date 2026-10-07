@@ -1,7 +1,7 @@
 using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 
-namespace BombIt.Server.Game;
+namespace BombIt.Server.Game.Models;
 
 public class Player
 {

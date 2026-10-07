@@ -1,6 +1,6 @@
 using BombIt.Shared.DTOs;
 
-namespace BombIt.Server.Game;
+namespace BombIt.Server.Game.Models;
 
 public class Bomb
 {

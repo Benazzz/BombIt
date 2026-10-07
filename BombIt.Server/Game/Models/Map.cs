@@ -3,7 +3,7 @@ using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 using System.Text.Json;
 
-namespace BombIt.Server.Game;
+namespace BombIt.Server.Game.Models;
 
 public class Map
 {

@@ -1,4 +1,4 @@
-using BombIt.Server.Game;
+using BombIt.Server.Game.Services;
 using BombIt.Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);

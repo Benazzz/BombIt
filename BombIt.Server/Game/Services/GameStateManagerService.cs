@@ -2,19 +2,21 @@ using System.Collections.Concurrent;
 using BombIt.Shared.Commands;
 using BombIt.Shared.Enums;
 using BombIt.Shared.DTOs;
+using BombIt.Server.Game.PowerUps.Factories;
+using BombIt.Server.Game.Models;
 
-namespace BombIt.Server.Game;
+namespace BombIt.Server.Game.Services;
 
-public class GameStateManager
+public class GameStateManagerService
 {
     private readonly ConcurrentDictionary<string, Player> _players = new();
     private readonly ConcurrentDictionary<string, PlayerInputCommand> _pendingInputs = new();
 
     // Singleton Pattern Implementation
-    private static readonly GameStateManager _instance = new GameStateManager();
-    public static GameStateManager Instance => _instance;
+    private static readonly GameStateManagerService _instance = new GameStateManagerService();
+    public static GameStateManagerService Instance => _instance;
 
-    private GameStateManager() { }
+    private GameStateManagerService() { }
 
     public GamePhase CurrentPhase { get; private set; } = GamePhase.Lobby;
     public string HostConnectionId { get; set; } = string.Empty;
@@ -26,12 +28,18 @@ public class GameStateManager
     private readonly List<Bomb> _bombs = new();
     private readonly List<Explosion> _explosions = new();
     private readonly List<PowerUp> _powerUps = new();
+    private readonly PowerUpCreator[] _powerUpCreators =
+    {
+        new BombUpCreator(),
+        new FireUpCreator(),
+        new SpeedUpCreator(),
+        new InvulnerabilityCreator()
+    };
     private readonly Random _random = new();
 
     private const double MoveSpeed = 3.0;
     private const double TickInterval = 1.0 / 30.0;
     private const double PowerUpSpawnChance = 0.65;
-    private const int MaxInvulnerabilityTicks = 1800; // 1 minute
 
     public Player AddPlayer(string connectionId)
     {
@@ -233,36 +241,11 @@ public class GameStateManager
 
                 if (pLeft < puRight && pRight > puLeft && pTop < puBottom && pBottom > puTop)
                 {
-                    ApplyPowerUp(player, pu.Type);
+                    pu.Apply(player);
                     _powerUps.RemoveAt(i);
                     break; // This power-up is consumed
                 }
             }
-        }
-    }
-
-    private void ApplyPowerUp(Player player, PowerUpType type)
-    {
-        switch (type)
-        {
-            case PowerUpType.BombUp:
-                if (player.MaxBombs < 5)
-                    player.MaxBombs++;
-                break;
-
-            case PowerUpType.FireUp:
-                if (player.BombRadius < 5)
-                    player.BombRadius++;
-                break;
-
-            case PowerUpType.SpeedUp:
-                player.SpeedMultiplier = Math.Min(player.SpeedMultiplier + 0.15, 2.0);
-                break;
-
-            case PowerUpType.Invulnerability:
-                int newTicks = player.InvulnerabilityTicks + 300; // +10 seconds
-                player.InvulnerabilityTicks = Math.Min(newTicks, MaxInvulnerabilityTicks);
-                break;
         }
     }
 
@@ -363,9 +346,8 @@ public class GameStateManager
         if (_random.NextDouble() < PowerUpSpawnChance)
         {
             // Equal probability for all 4 types
-            var types = Enum.GetValues<PowerUpType>();
-            var type = types[_random.Next(types.Length)];
-            _powerUps.Add(new PowerUp(x, y, type));
+            var creator = _powerUpCreators[_random.Next(_powerUpCreators.Length)];
+            _powerUps.Add(creator.CreatePowerUp(x, y));
         }
     }
 
