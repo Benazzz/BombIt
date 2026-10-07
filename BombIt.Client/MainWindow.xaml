@@ -22,7 +22,7 @@
                 <TextBlock x:Name="PlayersListText" Foreground="White" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,20"/>
 
                 <StackPanel x:Name="HostSettingsPanel" Visibility="Collapsed" Margin="0,0,0,20">
-                    <!-- NAUJA: raundų skaičius -->
+                    <!-- Raundų skaičius -->
                     <TextBlock Text="Rounds:" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
                     <Slider x:Name="RoundsSlider" Minimum="1" Maximum="10" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" Width="200" ValueChanged="RoundsSlider_ValueChanged"/>
                     <TextBlock x:Name="RoundsSliderLabel" Text="3" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,15"/>
@@ -38,7 +38,7 @@
             </StackPanel>
         </Border>
 
-        <!-- Countdown Panel (PAKEISTA: + raundo pranešimas virš skaičiaus) -->
+        <!-- Countdown Panel -->
         <Border x:Name="CountdownPanel" Background="#CC000000" Visibility="Hidden">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock x:Name="CountdownAnnouncementText" Foreground="Gold" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -51,7 +51,12 @@
             <TextBlock Text="YOU DIED!" Foreground="White" FontSize="70" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
 
-        <!-- NAUJA: Result Panel (raundo / mačo rezultatas) -->
+        <!-- Spectator Panel -->
+        <Border x:Name="SpectatorPanel" Background="#66000000" Height="80" VerticalAlignment="Top" Visibility="Hidden">
+            <TextBlock Text="SPECTATING – you will join the next match" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Result Panel (raundo / mačo rezultatas) -->
         <Border x:Name="ResultPanel" Background="#DD000000" Visibility="Hidden">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock x:Name="ResultText" Foreground="Gold" FontSize="44" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,20"/>
@@ -63,11 +68,9 @@
         <Border x:Name="SidePanel" Background="#333333" Width="200" HorizontalAlignment="Right" Visibility="Hidden">
             <StackPanel Margin="15">
                 <TextBlock Text="MATCH INFO" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-                <!-- NAUJA -->
                 <TextBlock x:Name="RoundText" Foreground="Gold" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
                 <TextBlock Text="Time Left:" Foreground="LightGray" FontSize="16"/>
                 <TextBlock x:Name="TimeLeftText" Text="3:40" Foreground="White" FontSize="32" FontWeight="Bold" Margin="0,0,0,20"/>
-                <!-- NAUJA -->
                 <TextBlock Text="Scores:" Foreground="LightGray" FontSize="16" Margin="0,0,0,5"/>
                 <TextBlock x:Name="ScoresText" Foreground="White" FontSize="14" TextWrapping="Wrap"/>
             </StackPanel>

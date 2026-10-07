@@ -9,4 +9,6 @@ public class PlayerStateDto
     public bool IsAlive { get; set; } = true;
     public bool IsInvulnerable { get; set; }
     public int Score { get; set; }
+    public bool IsInMatch { get; set; }
+    public bool IsSpectator { get; set; }
 }

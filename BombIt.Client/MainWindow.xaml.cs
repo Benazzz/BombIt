@@ -39,7 +39,6 @@ public partial class MainWindow : Window
         }
     }
 
-    // PAKEISTA – siunčia ir raundų skaičių
     private async void StartGameButton_Click(object sender, RoutedEventArgs e)
     {
         int rounds = (int)RoundsSlider.Value;
@@ -47,7 +46,6 @@ public partial class MainWindow : Window
         await _signalRClient.StartGameAsync(rounds, timeSeconds);
     }
 
-    // NAUJA
     private void RoundsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (RoundsSliderLabel != null)
@@ -89,7 +87,6 @@ public partial class MainWindow : Window
 
     private int _currentMapVersion = -1;
 
-    // PAKEISTA – RoundEnd / MatchEnd fazės, raundas ir taškai
     private void OnGameStateReceived(GameStateDto state)
     {
         if (state.MapVersion > _currentMapVersion)
@@ -106,6 +103,7 @@ public partial class MainWindow : Window
         {
             var me = state.Players.FirstOrDefault(p => p.PlayerId == _myConnectionId);
             bool amIDead = me != null && !me.IsAlive;
+            bool amISpectator = me != null && me.IsSpectator;
 
             if (state.Phase == GamePhase.Lobby)
             {
@@ -115,6 +113,7 @@ public partial class MainWindow : Window
                 MapCanvas.Visibility = Visibility.Hidden;
                 DeathPanel.Visibility = Visibility.Hidden;
                 ResultPanel.Visibility = Visibility.Hidden;
+                SpectatorPanel.Visibility = Visibility.Hidden;
 
                 PlayersListText.Text = $"Players connected: {state.Players.Count}/4";
 
@@ -130,6 +129,7 @@ public partial class MainWindow : Window
                 MapCanvas.Visibility = Visibility.Visible;
                 DeathPanel.Visibility = Visibility.Hidden;
                 ResultPanel.Visibility = Visibility.Hidden;
+                SpectatorPanel.Visibility = Visibility.Hidden;
 
                 CountdownAnnouncementText.Text = state.Announcement;
                 int seconds = (state.CountdownValue / 30) + 1;
@@ -143,7 +143,8 @@ public partial class MainWindow : Window
                 MapCanvas.Visibility = Visibility.Visible;
                 ResultPanel.Visibility = Visibility.Hidden;
 
-                DeathPanel.Visibility = amIDead ? Visibility.Visible : Visibility.Hidden;
+                DeathPanel.Visibility = amIDead && !amISpectator ? Visibility.Visible : Visibility.Hidden;
+                SpectatorPanel.Visibility = amISpectator ? Visibility.Visible : Visibility.Hidden;
 
                 int min = state.RoundTimeLeftSeconds / 60;
                 int sec = state.RoundTimeLeftSeconds % 60;
@@ -158,6 +159,7 @@ public partial class MainWindow : Window
                 MapCanvas.Visibility = Visibility.Visible;
                 DeathPanel.Visibility = Visibility.Hidden;
                 ResultPanel.Visibility = Visibility.Visible;
+                SpectatorPanel.Visibility = Visibility.Hidden;
 
                 ResultText.Text = state.Announcement;
                 ResultScoresText.Text = BuildScoresText(state);
@@ -168,7 +170,6 @@ public partial class MainWindow : Window
         });
     }
 
-    // NAUJA – raundo numeris ir taškai šoniniame skydelyje
     private void UpdateMatchInfo(GameStateDto state)
     {
         RoundText.Text = state.IsTieBreak
@@ -177,10 +178,10 @@ public partial class MainWindow : Window
         ScoresText.Text = BuildScoresText(state);
     }
 
-    // NAUJA – taškų sąrašas, surikiuotas nuo didžiausio
     private string BuildScoresText(GameStateDto state)
     {
         var lines = state.Players
+            .Where(p => p.IsInMatch)
             .OrderByDescending(p => p.Score)
             .Select(p => $"{p.Name}{(p.PlayerId == _myConnectionId ? " (you)" : "")}: {p.Score}");
 

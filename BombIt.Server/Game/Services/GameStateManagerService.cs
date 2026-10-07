@@ -42,6 +42,8 @@ public class GameStateManagerService
     public string Announcement => _announcer.CurrentMessage;
     private int _roundTimeSeconds = 220;
     private int _playersAtRoundStart = 0;
+    private readonly HashSet<string> _matchPlayerIds = new();
+    private readonly HashSet<string> _roundPlayerIds = new();
 
     private Map _map = Map.LoadDefault();
     private readonly List<Bomb> _bombs = new();
@@ -116,7 +118,11 @@ public class GameStateManagerService
         IsTieBreak = false;
 
         _events.Notify(new MatchStartedEvent(TotalRounds)); // Observer Pattern
-        StartNextRound(_players.Values.ToList());
+        _matchPlayerIds.Clear();
+        foreach (var id in _players.Keys)
+            _matchPlayerIds.Add(id);
+
+        StartNextRound(GetMatchPlayers());
     }
 
     private void StartNextRound(List<Player> participants)
@@ -134,7 +140,11 @@ public class GameStateManagerService
         MapVersion++;
 
         AssignSpawnPoints(participants);
-        _playersAtRoundStart = _players.Values.Count(p => p.IsAlive);
+        _roundPlayerIds.Clear();
+        foreach (var p in _players.Values.Where(p => p.IsAlive))
+            _roundPlayerIds.Add(p.ConnectionId);
+
+        _playersAtRoundStart = _roundPlayerIds.Count;
 
         _events.Notify(new RoundStartedEvent(CurrentRound, IsTieBreak)); // Observer Pattern  
     }
@@ -174,6 +184,12 @@ public class GameStateManagerService
     public IReadOnlyCollection<PowerUp> GetPowerUps() => _powerUps.ToList();
     public Map GetMap() => _map;
     public int GetScore(string playerId) => _scoreBoard.GetScore(playerId);
+    public bool IsInMatch(string playerId) => _matchPlayerIds.Contains(playerId);
+    public bool IsInRound(string playerId) => _roundPlayerIds.Contains(playerId);
+
+    // Tik mačą pradėję ir vis dar prisijungę žaidėjai
+    private List<Player> GetMatchPlayers() =>
+        _players.Values.Where(p => _matchPlayerIds.Contains(p.ConnectionId)).ToList();
 
     public void Tick()
     {
@@ -249,7 +265,7 @@ public class GameStateManagerService
 
     private void AdvanceMatch()
     {
-        var players = _players.Values.ToList();
+        var players = GetMatchPlayers();
 
         if (CurrentRound < TotalRounds)
         {

@@ -33,6 +33,8 @@ public class GameLoopService : BackgroundService
                 {
                     var dto = p.ToDto();
                     dto.Score = stateManager.GetScore(p.ConnectionId);
+                    dto.IsInMatch = stateManager.IsInMatch(p.ConnectionId);
+                    dto.IsSpectator = !stateManager.IsInRound(p.ConnectionId);
                     return dto;
                 }).ToList(),
                 Bombs = stateManager.GetBombs().Select(b => b.ToDto()).ToList(),
