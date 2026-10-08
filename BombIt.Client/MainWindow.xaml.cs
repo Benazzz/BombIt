@@ -1,8 +1,9 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using BombIt.Client.Services;
 using BombIt.Client.Rendering;
 using BombIt.Shared.Commands;
+using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 
 namespace BombIt.Client;
@@ -40,8 +41,17 @@ public partial class MainWindow : Window
 
     private async void StartGameButton_Click(object sender, RoutedEventArgs e)
     {
+        int rounds = (int)RoundsSlider.Value;
         int timeSeconds = (int)TimeSlider.Value;
-        await _signalRClient.StartGameAsync(timeSeconds);
+        await _signalRClient.StartGameAsync(rounds, timeSeconds);
+    }
+
+    private void RoundsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (RoundsSliderLabel != null)
+        {
+            RoundsSliderLabel.Text = $"{e.NewValue}";
+        }
     }
 
     private void TimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -77,13 +87,12 @@ public partial class MainWindow : Window
 
     private int _currentMapVersion = -1;
 
-    private void OnGameStateReceived(BombIt.Shared.DTOs.GameStateDto state)
+    private void OnGameStateReceived(GameStateDto state)
     {
-        // Handle map updates (fire and forget task so we don't block the UI thread)
         if (state.MapVersion > _currentMapVersion)
         {
             _currentMapVersion = state.MapVersion;
-            Task.Run(async () => 
+            Task.Run(async () =>
             {
                 var map = await _signalRClient.GetMapAsync();
                 Dispatcher.Invoke(() => _renderer.DrawMap(map));
@@ -94,6 +103,7 @@ public partial class MainWindow : Window
         {
             var me = state.Players.FirstOrDefault(p => p.PlayerId == _myConnectionId);
             bool amIDead = me != null && !me.IsAlive;
+            bool amISpectator = me != null && me.IsSpectator;
 
             if (state.Phase == GamePhase.Lobby)
             {
@@ -102,9 +112,11 @@ public partial class MainWindow : Window
                 SidePanel.Visibility = Visibility.Hidden;
                 MapCanvas.Visibility = Visibility.Hidden;
                 DeathPanel.Visibility = Visibility.Hidden;
-                
+                ResultPanel.Visibility = Visibility.Hidden;
+                SpectatorPanel.Visibility = Visibility.Hidden;
+
                 PlayersListText.Text = $"Players connected: {state.Players.Count}/4";
-                
+
                 bool isHost = state.HostConnectionId == _myConnectionId;
                 StartGameButton.Visibility = isHost ? Visibility.Visible : Visibility.Collapsed;
                 HostSettingsPanel.Visibility = isHost ? Visibility.Visible : Visibility.Collapsed;
@@ -114,28 +126,66 @@ public partial class MainWindow : Window
                 LobbyPanel.Visibility = Visibility.Hidden;
                 CountdownPanel.Visibility = Visibility.Visible;
                 SidePanel.Visibility = Visibility.Hidden;
-                MapCanvas.Visibility = Visibility.Visible; 
+                MapCanvas.Visibility = Visibility.Visible;
                 DeathPanel.Visibility = Visibility.Hidden;
-                
+                ResultPanel.Visibility = Visibility.Hidden;
+                SpectatorPanel.Visibility = Visibility.Hidden;
+
+                CountdownAnnouncementText.Text = state.Announcement;
                 int seconds = (state.CountdownValue / 30) + 1;
                 CountdownText.Text = seconds.ToString();
             }
-            else if (state.Phase == GamePhase.Playing || state.Phase == GamePhase.RoundEnd)
+            else if (state.Phase == GamePhase.Playing)
             {
                 LobbyPanel.Visibility = Visibility.Hidden;
                 CountdownPanel.Visibility = Visibility.Hidden;
                 SidePanel.Visibility = Visibility.Visible;
                 MapCanvas.Visibility = Visibility.Visible;
+                ResultPanel.Visibility = Visibility.Hidden;
 
-                DeathPanel.Visibility = amIDead ? Visibility.Visible : Visibility.Hidden;
+                DeathPanel.Visibility = amIDead && !amISpectator ? Visibility.Visible : Visibility.Hidden;
+                SpectatorPanel.Visibility = amISpectator ? Visibility.Visible : Visibility.Hidden;
 
                 int min = state.RoundTimeLeftSeconds / 60;
                 int sec = state.RoundTimeLeftSeconds % 60;
                 TimeLeftText.Text = $"{min}:{sec:D2}";
+                UpdateMatchInfo(state);
+            }
+            else if (state.Phase == GamePhase.RoundEnd || state.Phase == GamePhase.MatchEnd)
+            {
+                LobbyPanel.Visibility = Visibility.Hidden;
+                CountdownPanel.Visibility = Visibility.Hidden;
+                SidePanel.Visibility = Visibility.Visible;
+                MapCanvas.Visibility = Visibility.Visible;
+                DeathPanel.Visibility = Visibility.Hidden;
+                ResultPanel.Visibility = Visibility.Visible;
+                SpectatorPanel.Visibility = Visibility.Hidden;
+
+                ResultText.Text = state.Announcement;
+                ResultScoresText.Text = BuildScoresText(state);
+                UpdateMatchInfo(state);
             }
 
             _renderer.DrawDynamicState(state);
         });
+    }
+
+    private void UpdateMatchInfo(GameStateDto state)
+    {
+        RoundText.Text = state.IsTieBreak
+            ? "TIE-BREAK"
+            : $"Round {state.CurrentRound}/{state.TotalRounds}";
+        ScoresText.Text = BuildScoresText(state);
+    }
+
+    private string BuildScoresText(GameStateDto state)
+    {
+        var lines = state.Players
+            .Where(p => p.IsInMatch)
+            .OrderByDescending(p => p.Score)
+            .Select(p => $"{p.Name}{(p.PlayerId == _myConnectionId ? " (you)" : "")}: {p.Score}");
+
+        return string.Join(Environment.NewLine, lines);
     }
 
     private async void Window_KeyDown(object sender, KeyEventArgs e)

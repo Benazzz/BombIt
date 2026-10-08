@@ -29,10 +29,21 @@ public class GameLoopService : BackgroundService
                 CountdownValue = stateManager.CountdownTicks,
                 RoundTimeLeftSeconds = stateManager.RoundTimeLeftTicks / 30,
                 MapVersion = stateManager.MapVersion,
-                Players = stateManager.GetAllPlayers().Select(p => p.ToDto()).ToList(),
+                Players = stateManager.GetAllPlayers().Select(p =>
+                {
+                    var dto = p.ToDto();
+                    dto.Score = stateManager.GetScore(p.ConnectionId);
+                    dto.IsInMatch = stateManager.IsInMatch(p.ConnectionId);
+                    dto.IsSpectator = !stateManager.IsInRound(p.ConnectionId);
+                    return dto;
+                }).ToList(),
                 Bombs = stateManager.GetBombs().Select(b => b.ToDto()).ToList(),
                 Explosions = stateManager.GetExplosions().Select(e => e.ToDto()).ToList(),
-                PowerUps = stateManager.GetPowerUps().Select(p => p.ToDto()).ToList()
+                PowerUps = stateManager.GetPowerUps().Select(p => p.ToDto()).ToList(),
+                CurrentRound = stateManager.CurrentRound,
+                TotalRounds = stateManager.TotalRounds,
+                IsTieBreak = stateManager.IsTieBreak,
+                Announcement = stateManager.Announcement
             };
 
             await _hubContext.Clients.All.SendAsync("ReceiveGameState", state, stoppingToken);

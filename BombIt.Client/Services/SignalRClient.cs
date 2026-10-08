@@ -43,11 +43,11 @@ public class SignalRClient
         }
     }
 
-    public async Task StartGameAsync(int timeSeconds)
+    public async Task StartGameAsync(int rounds, int timeSeconds)
     {
         if (_connection.State == HubConnectionState.Connected)
         {
-            await _connection.InvokeAsync("StartGame", timeSeconds);
+            await _connection.InvokeAsync("StartGame", rounds, timeSeconds);
         }
     }
 

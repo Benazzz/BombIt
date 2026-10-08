@@ -29,9 +29,9 @@ public class GameHub : Hub
         return Task.CompletedTask;
     }
 
-    public Task StartGame(int timeSeconds)
+    public Task StartGame(int rounds, int timeSeconds)
     {
-        State.StartGame(Context.ConnectionId, timeSeconds);
+        State.StartGame(Context.ConnectionId, rounds, timeSeconds);
         return Task.CompletedTask;
     }
 

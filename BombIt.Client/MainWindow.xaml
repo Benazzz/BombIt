@@ -8,7 +8,7 @@
     <Grid>
         <!-- Game Area -->
         <Canvas x:Name="MapCanvas" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden"/>
-        
+
         <!-- UI Overlay -->
         <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10">
             <Button x:Name="ConnectButton" Content="Connect to server" Width="200" Height="40" Click="ConnectButton_Click"/>
@@ -20,22 +20,30 @@
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="LOBBY" Foreground="White" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
                 <TextBlock x:Name="PlayersListText" Foreground="White" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,20"/>
-                
+
                 <StackPanel x:Name="HostSettingsPanel" Visibility="Collapsed" Margin="0,0,0,20">
-                    <TextBlock Text="Match Time (Seconds):" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <!-- Raundų skaičius -->
+                    <TextBlock Text="Rounds:" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <Slider x:Name="RoundsSlider" Minimum="1" Maximum="10" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" Width="200" ValueChanged="RoundsSlider_ValueChanged"/>
+                    <TextBlock x:Name="RoundsSliderLabel" Text="3" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,15"/>
+
+                    <TextBlock Text="Round Time (Seconds):" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
                     <Slider x:Name="TimeSlider" Minimum="60" Maximum="300" Value="220" TickFrequency="10" IsSnapToTickEnabled="True" Width="200" ValueChanged="TimeSlider_ValueChanged"/>
                     <TextBlock x:Name="TimeSliderLabel" Text="220 s" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                 </StackPanel>
 
                 <Button x:Name="StartGameButton" Content="START GAME (Host Only)" Width="250" Height="50" FontSize="18" Click="StartGameButton_Click" Visibility="Collapsed"/>
-                
+
                 <TextBlock x:Name="WaitingForHostText" Text="waiting for the host to start the game..." Foreground="LightGray" FontSize="14" HorizontalAlignment="Center" Visibility="Collapsed"/>
             </StackPanel>
         </Border>
 
         <!-- Countdown Panel -->
         <Border x:Name="CountdownPanel" Background="#CC000000" Visibility="Hidden">
-            <TextBlock x:Name="CountdownText" Foreground="White" FontSize="100" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock x:Name="CountdownAnnouncementText" Foreground="Gold" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="CountdownText" Foreground="White" FontSize="100" FontWeight="Bold" HorizontalAlignment="Center"/>
+            </StackPanel>
         </Border>
 
         <!-- Death Panel -->
@@ -43,12 +51,28 @@
             <TextBlock Text="YOU DIED!" Foreground="White" FontSize="70" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
 
+        <!-- Spectator Panel -->
+        <Border x:Name="SpectatorPanel" Background="#66000000" Height="80" VerticalAlignment="Top" Visibility="Hidden">
+            <TextBlock Text="SPECTATING – you will join the next match" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Result Panel (raundo / mačo rezultatas) -->
+        <Border x:Name="ResultPanel" Background="#DD000000" Visibility="Hidden">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock x:Name="ResultText" Foreground="Gold" FontSize="44" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,20"/>
+                <TextBlock x:Name="ResultScoresText" Foreground="White" FontSize="22" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
         <!-- Side Panel (Game Stats) -->
         <Border x:Name="SidePanel" Background="#333333" Width="200" HorizontalAlignment="Right" Visibility="Hidden">
             <StackPanel Margin="15">
                 <TextBlock Text="MATCH INFO" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <TextBlock x:Name="RoundText" Foreground="Gold" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
                 <TextBlock Text="Time Left:" Foreground="LightGray" FontSize="16"/>
                 <TextBlock x:Name="TimeLeftText" Text="3:40" Foreground="White" FontSize="32" FontWeight="Bold" Margin="0,0,0,20"/>
+                <TextBlock Text="Scores:" Foreground="LightGray" FontSize="16" Margin="0,0,0,5"/>
+                <TextBlock x:Name="ScoresText" Foreground="White" FontSize="14" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
     </Grid>

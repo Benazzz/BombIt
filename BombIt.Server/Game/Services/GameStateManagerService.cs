@@ -4,6 +4,8 @@ using BombIt.Shared.Enums;
 using BombIt.Shared.DTOs;
 using BombIt.Server.Game.PowerUps.Factories;
 using BombIt.Server.Game.Models;
+using BombIt.Server.Game.Events.Observers;
+using BombIt.Server.Game.Events;
 
 namespace BombIt.Server.Game.Services;
 
@@ -15,14 +17,33 @@ public class GameStateManagerService
     // Singleton Pattern Implementation
     private static readonly GameStateManagerService _instance = new GameStateManagerService();
     public static GameStateManagerService Instance => _instance;
+    private readonly GameEventPublisher _events = new(); // Observer Pattern
+    private readonly ScoreBoard _scoreBoard = new(); // Observer Pattern
+    private readonly GameAnnouncer _announcer = new(); // Observer Pattern
 
-    private GameStateManagerService() { }
+    private GameStateManagerService()
+    {
+        // Observer Pattern
+        _events.Attach(new GameEventLogger());
+        _events.Attach(new DeadPlayerCleanup());
+        _events.Attach(_scoreBoard);
+        _events.Attach(_announcer);
+    }
 
     public GamePhase CurrentPhase { get; private set; } = GamePhase.Lobby;
     public string HostConnectionId { get; set; } = string.Empty;
     public int CountdownTicks { get; private set; } = 0;
     public int RoundTimeLeftTicks { get; private set; } = 0;
     public int MapVersion { get; private set; } = 0;
+
+    public int TotalRounds { get; private set; } = 3;
+    public int CurrentRound { get; private set; } = 0;
+    public bool IsTieBreak { get; private set; } = false;
+    public string Announcement => _announcer.CurrentMessage;
+    private int _roundTimeSeconds = 220;
+    private int _playersAtRoundStart = 0;
+    private readonly HashSet<string> _matchPlayerIds = new();
+    private readonly HashSet<string> _roundPlayerIds = new();
 
     private Map _map = Map.LoadDefault();
     private readonly List<Bomb> _bombs = new();
@@ -40,10 +61,19 @@ public class GameStateManagerService
     private const double MoveSpeed = 3.0;
     private const double TickInterval = 1.0 / 30.0;
     private const double PowerUpSpawnChance = 0.65;
+    private const int CountdownDurationTicks = 90;  
+    private const int RoundEndDisplayTicks = 90;    
+    private const int MatchEndDisplayTicks = 150;
 
     public Player AddPlayer(string connectionId)
     {
         var player = new Player(connectionId, $"Player-{connectionId[..4]}", 0, 0);
+
+        if (CurrentPhase != GamePhase.Lobby)
+        {
+            player.IsAlive = false;
+        }
+
         _players[connectionId] = player;
 
         if (string.IsNullOrEmpty(HostConnectionId) || !_players.ContainsKey(HostConnectionId))
@@ -77,23 +107,49 @@ public class GameStateManagerService
         }
     }
 
-    public void StartGame(string connectionId, int timeSeconds)
+    public void StartGame(string connectionId, int rounds, int timeSeconds)
     {
-        if (CurrentPhase == GamePhase.Lobby && connectionId == HostConnectionId)
-        {
-            CurrentPhase = GamePhase.Countdown;
-            CountdownTicks = 90;
-            RoundTimeLeftTicks = timeSeconds * 30;
-            _bombs.Clear();
-            _explosions.Clear();
-            _powerUps.Clear();
-            _map = Map.LoadDefault();
-            MapVersion++;
-            AssignSpawnPoints();
-        }
+        if (CurrentPhase != GamePhase.Lobby || connectionId != HostConnectionId)
+            return;
+
+        TotalRounds = Math.Clamp(rounds, 1, 10);
+        _roundTimeSeconds = Math.Clamp(timeSeconds, 60, 300);
+        CurrentRound = 0;
+        IsTieBreak = false;
+
+        _events.Notify(new MatchStartedEvent(TotalRounds)); // Observer Pattern
+        _matchPlayerIds.Clear();
+        foreach (var id in _players.Keys)
+            _matchPlayerIds.Add(id);
+
+        StartNextRound(GetMatchPlayers());
     }
 
-    private void AssignSpawnPoints()
+    private void StartNextRound(List<Player> participants)
+    {
+        CurrentRound++;
+        CurrentPhase = GamePhase.Countdown;
+        CountdownTicks = CountdownDurationTicks;
+        RoundTimeLeftTicks = _roundTimeSeconds * 30;
+
+        _bombs.Clear();
+        _explosions.Clear();
+        _powerUps.Clear();
+        _pendingInputs.Clear();
+        _map = Map.LoadDefault();
+        MapVersion++;
+
+        AssignSpawnPoints(participants);
+        _roundPlayerIds.Clear();
+        foreach (var p in _players.Values.Where(p => p.IsAlive))
+            _roundPlayerIds.Add(p.ConnectionId);
+
+        _playersAtRoundStart = _roundPlayerIds.Count;
+
+        _events.Notify(new RoundStartedEvent(CurrentRound, IsTieBreak)); // Observer Pattern  
+    }
+
+    private void AssignSpawnPoints(List<Player> participants)
     {
         var corners = new[]
         {
@@ -103,25 +159,37 @@ public class GameStateManagerService
             (13.5, 11.5)
         };
 
-        int i = 0;
         foreach (var player in _players.Values)
         {
-            if (i < corners.Length)
-            {
-                player.X = corners[i].Item1;
-                player.Y = corners[i].Item2;
-                player.IsAlive = true;
-                player.ResetPowerUps();
-                i++;
-            }
+            player.IsAlive = false;
+            player.ResetPowerUps();
+        }
+
+        int i = 0;
+        foreach (var player in participants)
+        {
+            if (i >= corners.Length) break;
+
+            player.X = corners[i].Item1;
+            player.Y = corners[i].Item2;
+            player.IsAlive = true;
+            i++;
         }
     }
+
 
     public IReadOnlyCollection<Player> GetAllPlayers() => _players.Values.ToList();
     public IReadOnlyCollection<Bomb> GetBombs() => _bombs.ToList();
     public IReadOnlyCollection<Explosion> GetExplosions() => _explosions.ToList();
     public IReadOnlyCollection<PowerUp> GetPowerUps() => _powerUps.ToList();
     public Map GetMap() => _map;
+    public int GetScore(string playerId) => _scoreBoard.GetScore(playerId);
+    public bool IsInMatch(string playerId) => _matchPlayerIds.Contains(playerId);
+    public bool IsInRound(string playerId) => _roundPlayerIds.Contains(playerId);
+
+    // Tik mačą pradėję ir vis dar prisijungę žaidėjai
+    private List<Player> GetMatchPlayers() =>
+        _players.Values.Where(p => _matchPlayerIds.Contains(p.ConnectionId)).ToList();
 
     public void Tick()
     {
@@ -134,6 +202,14 @@ public class GameStateManagerService
             }
         }
         else if (CurrentPhase == GamePhase.RoundEnd)
+        {
+            CountdownTicks--;
+            if (CountdownTicks <= 0)
+            {
+                AdvanceMatch();
+            }
+        }
+        else if (CurrentPhase == GamePhase.MatchEnd)
         {
             CountdownTicks--;
             if (CountdownTicks <= 0)
@@ -154,13 +230,62 @@ public class GameStateManagerService
             ProcessBombTimers();
             ProcessExplosionTimers();
 
-            if (!_players.Values.Any(p => p.IsAlive))
-            {
-                CurrentPhase = GamePhase.RoundEnd;
-                CountdownTicks = 90;
-            }
+            CheckRoundEnd();
         }
     }
+
+    private void CheckRoundEnd()
+    {
+        var alive = _players.Values.Where(p => p.IsAlive).ToList();
+
+        // Testuojant vienam (1 dalyvis) raundas baigiasi, kai jis žūva
+        bool roundOver = _playersAtRoundStart >= 2
+            ? alive.Count <= 1
+            : alive.Count == 0;
+
+        if (roundOver)
+        {
+            EndRound(alive.Count == 1 ? alive[0] : null);
+            return;
+        }
+
+        if (RoundTimeLeftTicks <= 0)
+        {
+            // TODO: Sudden Death. Kol kas – lygiosios.
+            EndRound(null);
+        }
+    }
+
+    private void EndRound(Player? winner)
+    {
+        _events.Notify(new RoundEndedEvent(CurrentRound, winner)); // Observer Pattern
+        CurrentPhase = GamePhase.RoundEnd;
+        CountdownTicks = RoundEndDisplayTicks;
+    }
+
+    private void AdvanceMatch()
+    {
+        var players = GetMatchPlayers();
+
+        if (CurrentRound < TotalRounds)
+        {
+            StartNextRound(players);
+            return;
+        }
+
+        var leaders = _scoreBoard.GetLeaders(players);
+        if (leaders.Count > 1)
+        {
+            IsTieBreak = true;
+            StartNextRound(leaders);
+            return;
+        }
+
+        _events.Notify(new MatchEndedEvent(leaders.FirstOrDefault())); // Observer Pattern
+        CurrentPhase = GamePhase.MatchEnd;
+        CountdownTicks = MatchEndDisplayTicks;
+    }
+
 
     private void ProcessInvulnerabilityTimers()
     {
@@ -384,6 +509,7 @@ public class GameStateManagerService
                         if (player.InvulnerabilityTicks <= 0)
                         {
                             player.IsAlive = false;
+                            _events.Notify(new PlayerDiedEvent(player)); // Observer Pattern
                         }
                     }
                 }
