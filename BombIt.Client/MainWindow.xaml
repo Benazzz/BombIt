@@ -21,15 +21,27 @@
                 <TextBlock Text="LOBBY" Foreground="White" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
                 <TextBlock x:Name="PlayersListText" Foreground="White" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,20"/>
 
+                <!-- Command Pattern: host'o nustatymai keičiami komandomis -->
                 <StackPanel x:Name="HostSettingsPanel" Visibility="Collapsed" Margin="0,0,0,20">
-                    <!-- Raundų skaičius -->
-                    <TextBlock Text="Rounds:" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                    <Slider x:Name="RoundsSlider" Minimum="1" Maximum="10" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" Width="200" ValueChanged="RoundsSlider_ValueChanged"/>
-                    <TextBlock x:Name="RoundsSliderLabel" Text="3" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,15"/>
+                    <TextBlock Text="Rounds:" Foreground="White" HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,15">
+                        <Button x:Name="RoundsMinusButton" Content="-" Width="40" Height="30" Click="RoundsMinus_Click"/>
+                        <TextBlock x:Name="RoundsValueText" Foreground="White" FontSize="18" Width="80" TextAlignment="Center" VerticalAlignment="Center"/>
+                        <Button x:Name="RoundsPlusButton" Content="+" Width="40" Height="30" Click="RoundsPlus_Click"/>
+                    </StackPanel>
 
-                    <TextBlock Text="Round Time (Seconds):" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                    <Slider x:Name="TimeSlider" Minimum="60" Maximum="300" Value="220" TickFrequency="10" IsSnapToTickEnabled="True" Width="200" ValueChanged="TimeSlider_ValueChanged"/>
-                    <TextBlock x:Name="TimeSliderLabel" Text="220 s" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="Round time:" Foreground="White" HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,15">
+                        <Button x:Name="TimeMinusButton" Content="-10" Width="40" Height="30" Click="TimeMinus_Click"/>
+                        <TextBlock x:Name="TimeValueText" Foreground="White" FontSize="18" Width="80" TextAlignment="Center" VerticalAlignment="Center"/>
+                        <Button x:Name="TimePlusButton" Content="+10" Width="40" Height="30" Click="TimePlus_Click"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button x:Name="UndoSettingsButton" Content="Undo (Ctrl+Z)" Width="110" Height="30" Margin="0,0,10,0" Click="UndoSettings_Click"/>
+                        <Button x:Name="ResetSettingsButton" Content="Defaults" Width="110" Height="30" Click="ResetSettings_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="LastActionText" Foreground="LightGray" FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                 </StackPanel>
 
                 <Button x:Name="StartGameButton" Content="START GAME (Host Only)" Width="250" Height="50" FontSize="18" Click="StartGameButton_Click" Visibility="Collapsed"/>
