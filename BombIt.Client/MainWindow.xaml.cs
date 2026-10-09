@@ -5,6 +5,8 @@ using BombIt.Client.Rendering;
 using BombIt.Shared.Commands;
 using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
+using BombIt.Client.Commands;
+using BombIt.Client.Settings;
 
 namespace BombIt.Client;
 
@@ -15,6 +17,10 @@ public partial class MainWindow : Window
     private Direction _currentDirection = Direction.None;
     private string _myConnectionId = string.Empty;
 
+    // Command Pattern
+    private readonly MatchSettings _matchSettings = new();
+    private readonly SettingsCommandInvoker _settingsInvoker = new();
+
     public MainWindow()
     {
         InitializeComponent();
@@ -22,6 +28,7 @@ public partial class MainWindow : Window
         _signalRClient.Connected += OnConnected;
         _signalRClient.GameStateReceived += OnGameStateReceived;
         _renderer = new GameRenderer(MapCanvas);
+        RefreshSettingsUi();
     }
 
     private async void ConnectButton_Click(object sender, RoutedEventArgs e)
@@ -41,25 +48,52 @@ public partial class MainWindow : Window
 
     private async void StartGameButton_Click(object sender, RoutedEventArgs e)
     {
-        int rounds = (int)RoundsSlider.Value;
-        int timeSeconds = (int)TimeSlider.Value;
-        await _signalRClient.StartGameAsync(rounds, timeSeconds);
+        await _signalRClient.StartGameAsync(_matchSettings.Rounds, _matchSettings.RoundTimeSeconds);
+        _settingsInvoker.ClearHistory(); // Command Pattern
+        RefreshSettingsUi();
     }
 
-    private void RoundsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    // Command Pattern
+    private void RoundsMinus_Click(object sender, RoutedEventArgs e) =>
+        RunSettingsCommand(new ChangeRoundsCommand(_matchSettings, _matchSettings.Rounds - 1));
+
+    private void RoundsPlus_Click(object sender, RoutedEventArgs e) =>
+        RunSettingsCommand(new ChangeRoundsCommand(_matchSettings, _matchSettings.Rounds + 1));
+
+    private void TimeMinus_Click(object sender, RoutedEventArgs e) =>
+        RunSettingsCommand(new ChangeRoundTimeCommand(_matchSettings, _matchSettings.RoundTimeSeconds - MatchSettings.RoundTimeStep));
+
+    private void TimePlus_Click(object sender, RoutedEventArgs e) =>
+        RunSettingsCommand(new ChangeRoundTimeCommand(_matchSettings, _matchSettings.RoundTimeSeconds + MatchSettings.RoundTimeStep));
+
+    private void ResetSettings_Click(object sender, RoutedEventArgs e) =>
+        RunSettingsCommand(new ResetSettingsCommand(_matchSettings));
+
+    private void UndoSettings_Click(object sender, RoutedEventArgs e)
     {
-        if (RoundsSliderLabel != null)
-        {
-            RoundsSliderLabel.Text = $"{e.NewValue}";
-        }
+        _settingsInvoker.Undo();
+        RefreshSettingsUi();
     }
 
-    private void TimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void RunSettingsCommand(ISettingsCommand command)
     {
-        if (TimeSliderLabel != null)
-        {
-            TimeSliderLabel.Text = $"{e.NewValue} s";
-        }
+        _settingsInvoker.ExecuteCommand(command);
+        RefreshSettingsUi();
+    }
+
+    private void RefreshSettingsUi()
+    {
+        RoundsValueText.Text = _matchSettings.Rounds.ToString();
+        TimeValueText.Text = $"{_matchSettings.RoundTimeSeconds} s";
+
+        RoundsMinusButton.IsEnabled = _matchSettings.Rounds > MatchSettings.MinRounds;
+        RoundsPlusButton.IsEnabled = _matchSettings.Rounds < MatchSettings.MaxRounds;
+        TimeMinusButton.IsEnabled = _matchSettings.RoundTimeSeconds > MatchSettings.MinRoundTime;
+        TimePlusButton.IsEnabled = _matchSettings.RoundTimeSeconds < MatchSettings.MaxRoundTime;
+        ResetSettingsButton.IsEnabled = !_matchSettings.IsDefault;
+        UndoSettingsButton.IsEnabled = _settingsInvoker.CanUndo;
+
+        LastActionText.Text = _settingsInvoker.LastDescription is { } last ? $"Last: {last}" : string.Empty;
     }
 
     private async void OnConnected(string connectionId)
@@ -190,6 +224,14 @@ public partial class MainWindow : Window
 
     private async void Window_KeyDown(object sender, KeyEventArgs e)
     {
+        // Command Pattern
+        if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control
+            && HostSettingsPanel.Visibility == Visibility.Visible && _settingsInvoker.CanUndo)
+        {
+            UndoSettings_Click(sender, e);
+            return;
+        }
+
         if (e.Key == Key.Enter)
         {
             await _signalRClient.SendInputAsync(new PlayerInputCommand { Direction = _currentDirection, PlaceBomb = true });
