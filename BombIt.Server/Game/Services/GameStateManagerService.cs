@@ -28,13 +28,7 @@ public class GameStateManagerService
     private readonly List<Bomb> _bombs = new();
     private readonly List<Explosion> _explosions = new();
     private readonly List<PowerUp> _powerUps = new();
-    private readonly PowerUpCreator[] _powerUpCreators =
-    {
-        new BombUpCreator(),
-        new FireUpCreator(),
-        new SpeedUpCreator(),
-        new InvulnerabilityCreator()
-    };
+    private readonly PowerUpCreator _powerUpCreator = new PowerUpFactory();
     private readonly Random _random = new();
 
     private const double MoveSpeed = 3.0;
@@ -346,8 +340,9 @@ public class GameStateManagerService
         if (_random.NextDouble() < PowerUpSpawnChance)
         {
             // Equal probability for all 4 types
-            var creator = _powerUpCreators[_random.Next(_powerUpCreators.Length)];
-            _powerUps.Add(creator.CreatePowerUp(x, y));
+            var types = Enum.GetValues<PowerUpType>();
+            var type = types[_random.Next(types.Length)];
+            _powerUps.Add(_powerUpCreator.CreatePowerUp(type, x, y));
         }
     }
 
