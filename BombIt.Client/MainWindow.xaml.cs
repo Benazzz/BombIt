@@ -37,7 +37,12 @@ public partial class MainWindow : Window
         StatusText.Text = "Connecting...";
         try
         {
-            await _signalRClient.StartAsync();
+            bool joined = await _signalRClient.StartAsync();
+            if (!joined)
+            {
+                StatusText.Text = "Server is full (max 4 players).";
+                ConnectButton.IsEnabled = true;
+            }
         }
         catch (Exception ex)
         {

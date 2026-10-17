@@ -1,3 +1,4 @@
+using BombIt.Server.Game.Facade;
 using BombIt.Server.Game.Services;
 using BombIt.Server.Hubs;
 
@@ -17,6 +18,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSingleton<GameFacade>(); // Facade Pattern
 builder.Services.AddHostedService<GameLoopService>();
 
 var app = builder.Build();
