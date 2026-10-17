@@ -24,10 +24,19 @@ public class SignalRClient
         });
     }
 
-    public async Task StartAsync()
+    public async Task<bool> StartAsync()
     {
         await _connection.StartAsync();
+
+        bool joined = await _connection.InvokeAsync<bool>("Join");
+        if (!joined)
+        {
+            await _connection.StopAsync();
+            return false;
+        }
+
         Connected?.Invoke(_connection.ConnectionId ?? "unknown");
+        return true;
     }
 
     public async Task<MapDto> GetMapAsync()
