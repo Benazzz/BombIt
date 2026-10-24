@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using BombIt.Client.Rendering.PlayerVisuals;
 using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 
@@ -12,7 +13,8 @@ public class GameRenderer
 {
     private const int TileSize = 40;
     private readonly Canvas _canvas;
-    private readonly Dictionary<string, Ellipse> _playerShapes = new();
+    private readonly Dictionary<string, Canvas> _playerShapes = new();
+    private readonly IPlayerVisual _playerVisual;
     private readonly BitmapImage _bombImage = new(new Uri("pack://application:,,,/Assets/bomb.png"));
 
     private readonly List<UIElement> _dynamicObjects = new();
@@ -20,6 +22,9 @@ public class GameRenderer
     public GameRenderer(Canvas canvas)
     {
         _canvas = canvas;
+        _playerVisual = new HostBadgeDecorator(
+            new NameTagDecorator(
+                new OutlineDecorator(new BasicPlayerVisual())));
     }
 
     public void DrawMap(MapDto map)
@@ -129,40 +134,27 @@ public class GameRenderer
         {
             activeIds.Add(player.PlayerId);
 
-            if (!_playerShapes.TryGetValue(player.PlayerId, out var ellipse))
+            if (!_playerShapes.TryGetValue(player.PlayerId, out var visualCanvas))
             {
-                ellipse = new Ellipse
-                {
-                    Width = TileSize * 0.7,
-                    Height = TileSize * 0.7,
-                    Fill = Brushes.Blue,
-                    Stroke = Brushes.Cyan,
-                    StrokeThickness = 2
-                };
-                _playerShapes[player.PlayerId] = ellipse;
-                _canvas.Children.Add(ellipse);
+                visualCanvas = new Canvas { IsHitTestVisible = false };
+                Panel.SetZIndex(visualCanvas, 1);
+                _playerShapes[player.PlayerId] = visualCanvas;
+                _canvas.Children.Add(visualCanvas);
             }
 
-            Canvas.SetLeft(ellipse, player.X * TileSize - ellipse.Width / 2);
-            Canvas.SetTop(ellipse, player.Y * TileSize - ellipse.Height / 2);
-
-            // Show invulnerability with a gold glow
-            if (player.IsInvulnerable)
-            {
-                ellipse.Stroke = Brushes.Gold;
-                ellipse.StrokeThickness = 3;
-            }
-            else
-            {
-                ellipse.Stroke = Brushes.Cyan;
-                ellipse.StrokeThickness = 2;
-            }
-
-            ellipse.Visibility = player.IsAlive
+            visualCanvas.Children.Clear();
+            Canvas.SetLeft(visualCanvas, player.X * TileSize);
+            Canvas.SetTop(visualCanvas, player.Y * TileSize);
+            visualCanvas.Visibility = player.IsAlive
                 ? Visibility.Visible
                 : Visibility.Collapsed;
-        }
 
+            if (player.IsAlive)
+            {
+                _playerVisual.Draw(visualCanvas, player, TileSize,
+                    player.PlayerId == state.HostConnectionId);
+            }
+        }
         var toRemove = _playerShapes.Keys.Where(id => !activeIds.Contains(id)).ToList();
         foreach (var id in toRemove)
         {
