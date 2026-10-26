@@ -41,11 +41,14 @@
                         <Button x:Name="UndoSettingsButton" Content="Undo (Ctrl+Z)" Width="110" Height="30" Margin="0,0,10,0" Click="UndoSettings_Click"/>
                         <Button x:Name="ResetSettingsButton" Content="Defaults" Width="110" Height="30" Click="ResetSettings_Click"/>
                     </StackPanel>
+
+                    <!--map-->
+                    <TextBlock Text="Map:" Foreground="White" HorizontalAlignment="Center"/>
+                    <ComboBox x:Name="MapChoiceCombo" Width="150" HorizontalAlignment="Center" Margin="0,5,0,15"/>
+
                     <TextBlock x:Name="LastActionText" Foreground="LightGray" FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                 </StackPanel>
-                <!--map-->
-                <TextBlock Text="Map:" Foreground="White" HorizontalAlignment="Center"/>
-                <ComboBox x:Name="MapChoiceCombo" Width="150" HorizontalAlignment="Center" Margin="0,5,0,15"/>
+                
 
                 <Button x:Name="StartGameButton" Content="START GAME (Host Only)" Width="250" Height="50" FontSize="18" Click="StartGameButton_Click" Visibility="Collapsed"/>
 
