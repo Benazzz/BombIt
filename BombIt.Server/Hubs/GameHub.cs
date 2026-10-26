@@ -49,9 +49,9 @@ public class GameHub : Hub
         return Task.CompletedTask;
     }
 
-    public Task StartGame(int rounds, int timeSeconds)
+    public Task StartGame(int rounds, int timeSeconds, string mapChoice)
     {
-        _game.StartMatch(Context.ConnectionId, rounds, timeSeconds);
+        _game.StartMatch(Context.ConnectionId, rounds, timeSeconds, mapChoice);
         return Task.CompletedTask;
     }
 

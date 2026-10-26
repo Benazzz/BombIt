@@ -2,6 +2,7 @@
 using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 using System.Text.Json;
+using BombIt.Server.Game.MapFactories;
 
 namespace BombIt.Server.Game.Models;
 
@@ -25,9 +26,11 @@ public class Map
         public string[] Layout { get; set; } = Array.Empty<string>();
     }
 
-    public static Map LoadDefault()
+    public static Map LoadDefault() => LoadFromFile("default-map.json");
+
+    public static Map LoadFromFile(string fileName)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "Maps", "default-map.json");
+        var path = Path.Combine(AppContext.BaseDirectory, "Maps", fileName);
         var json = File.ReadAllText(path);
         var raw = JsonSerializer.Deserialize<MapJson>(json, new JsonSerializerOptions
         {

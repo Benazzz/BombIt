@@ -6,11 +6,14 @@ using BombIt.Server.Game.PowerUps.Factories;
 using BombIt.Server.Game.Models;
 using BombIt.Server.Game.Events.Observers;
 using BombIt.Server.Game.Events;
+using BombIt.Server.Game.MapFactories;
+using BombIt.Server.Game.MapFactories.Products;
 
 namespace BombIt.Server.Game.Services;
 
 public class GameStateManagerService
 {
+    private IMapFactory? _fixedMapFactory; // null = atsitiktinis kiekviename raunde
     private readonly ConcurrentDictionary<string, Player> _players = new();
     private readonly ConcurrentDictionary<string, PlayerInputCommand> _pendingInputs = new();
 
@@ -45,7 +48,9 @@ public class GameStateManagerService
     private readonly HashSet<string> _matchPlayerIds = new();
     private readonly HashSet<string> _roundPlayerIds = new();
 
-    private Map _map = Map.LoadDefault();
+    private IMapFactory _mapFactory = MapFactoryRegistry.Default; // Abstract Factory
+    private Map _map = MapFactoryRegistry.Default.CreateMap();
+    private MapTheme _theme = MapFactoryRegistry.Default.CreateTheme();
     private readonly List<Bomb> _bombs = new();
     private readonly List<Explosion> _explosions = new();
     private readonly List<PowerUp> _powerUps = new();
@@ -101,11 +106,12 @@ public class GameStateManagerService
         }
     }
 
-    public void StartGame(string connectionId, int rounds, int timeSeconds)
-    {
-        if (CurrentPhase != GamePhase.Lobby || connectionId != HostConnectionId)
-            return;
+    public void StartGame(string connectionId, int rounds, int timeSeconds, string mapChoice = "Random")
+{
+    if (CurrentPhase != GamePhase.Lobby || connectionId != HostConnectionId)
+        return;
 
+        _fixedMapFactory = MapFactoryRegistry.FindByName(mapChoice); // Abstract Factory
         TotalRounds = Math.Clamp(rounds, 1, 10);
         _roundTimeSeconds = Math.Clamp(timeSeconds, 60, 300);
         CurrentRound = 0;
@@ -130,7 +136,9 @@ public class GameStateManagerService
         _explosions.Clear();
         _powerUps.Clear();
         _pendingInputs.Clear();
-        _map = Map.LoadDefault();
+        _mapFactory = _fixedMapFactory ?? MapFactoryRegistry.All[_random.Next(MapFactoryRegistry.All.Count)];
+        _map = _mapFactory.CreateMap();
+        _theme = _mapFactory.CreateTheme();
         MapVersion++;
 
         AssignSpawnPoints(participants);
@@ -145,13 +153,7 @@ public class GameStateManagerService
 
     private void AssignSpawnPoints(List<Player> participants)
     {
-        var corners = new[]
-        {
-            (1.5, 1.5),
-            (13.5, 1.5),
-            (1.5, 11.5),
-            (13.5, 11.5)
-        };
+        var corners = _mapFactory.CreateSpawnPoints(_map).GetSpawnPoints();
 
         foreach (var player in _players.Values)
         {
@@ -177,6 +179,7 @@ public class GameStateManagerService
     public IReadOnlyCollection<Explosion> GetExplosions() => _explosions.ToList();
     public IReadOnlyCollection<PowerUp> GetPowerUps() => _powerUps.ToList();
     public Map GetMap() => _map;
+    public MapTheme GetTheme() => _theme;
     public int GetScore(string playerId) => _scoreBoard.GetScore(playerId);
     public bool IsInMatch(string playerId) => _matchPlayerIds.Contains(playerId);
     public bool IsInRound(string playerId) => _roundPlayerIds.Contains(playerId);

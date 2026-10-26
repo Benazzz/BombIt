@@ -28,6 +28,8 @@ public partial class MainWindow : Window
         _signalRClient.Connected += OnConnected;
         _signalRClient.GameStateReceived += OnGameStateReceived;
         _renderer = new GameRenderer(MapCanvas);
+        MapChoiceCombo.ItemsSource = new[] { "Random", "Classic", "Desert" };
+        MapChoiceCombo.SelectedIndex = 0;
         RefreshSettingsUi();
     }
 
@@ -53,7 +55,8 @@ public partial class MainWindow : Window
 
     private async void StartGameButton_Click(object sender, RoutedEventArgs e)
     {
-        await _signalRClient.StartGameAsync(_matchSettings.Rounds, _matchSettings.RoundTimeSeconds);
+        var mapChoice = MapChoiceCombo.SelectedItem as string ?? "Random";
+        await _signalRClient.StartGameAsync(_matchSettings.Rounds, _matchSettings.RoundTimeSeconds, mapChoice);
         _settingsInvoker.ClearHistory(); // Command Pattern
         RefreshSettingsUi();
     }

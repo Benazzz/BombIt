@@ -51,11 +51,11 @@ public class GameFacade
         }
     }
 
-    public void StartMatch(string connectionId, int rounds, int timeSeconds)
+    public void StartMatch(string connectionId, int rounds, int timeSeconds, string mapChoice)
     {
         lock (_sync)
         {
-            _state.StartGame(connectionId, rounds, timeSeconds);
+            _state.StartGame(connectionId, rounds, timeSeconds, mapChoice);
         }
     }
 
@@ -63,7 +63,9 @@ public class GameFacade
     {
         lock (_sync)
         {
-            return _state.GetMap().ToDto();
+            var dto = _state.GetMap().ToDto();
+            dto.Theme = _state.GetTheme().ToDto();
+            return dto;
         }
     }
 

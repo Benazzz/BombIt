@@ -29,6 +29,14 @@ public class GameRenderer
 
     public void DrawMap(MapDto map)
     {
+        var tileBrushes = new Dictionary<TileType, Brush>
+        {
+            [TileType.Empty] = ThemeBrush(map.Theme?.EmptyColor, TileType.Empty),
+            [TileType.Destructible] = ThemeBrush(map.Theme?.DestructibleColor, TileType.Destructible),
+            [TileType.Indestructible] = ThemeBrush(map.Theme?.IndestructibleColor, TileType.Indestructible),
+        };
+        var gridBrush = ThemeBrush(map.Theme?.GridLineColor, null) ?? Brushes.Gray;
+
         _canvas.Children.Clear();
         _playerShapes.Clear();
         _dynamicObjects.Clear();
@@ -44,8 +52,8 @@ public class GameRenderer
                 {
                     Width = TileSize,
                     Height = TileSize,
-                    Fill = GetTileColor(tile),
-                    Stroke = Brushes.Gray,
+                    Fill = tileBrushes.GetValueOrDefault(tile, Brushes.Magenta),
+                    Stroke = gridBrush,
                     StrokeThickness = 0.5
                 };
 
@@ -54,6 +62,17 @@ public class GameRenderer
                 _canvas.Children.Add(rect);
             }
         }
+    }
+
+    private static Brush ThemeBrush(string? hex, TileType? fallbackTile)
+    {
+        if (!string.IsNullOrEmpty(hex))
+        {
+            var brush = (SolidColorBrush)new BrushConverter().ConvertFromString(hex)!;
+            brush.Freeze();
+            return brush;
+        }
+        return fallbackTile is { } t ? GetTileColor(t) : Brushes.Gray;
     }
 
     public void DrawDynamicState(GameStateDto state)
