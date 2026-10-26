@@ -1,22 +1,35 @@
-﻿using BombIt.Shared.Commands;
+using BombIt.Shared.Commands;
 using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 using System.Text.Json;
 using BombIt.Server.Game.MapFactories;
+using BombIt.Server.Game.Maps.Prototypes;
 
 namespace BombIt.Server.Game.Models;
 
-public class Map
+// Prototype Pattern - Concrete Prototype (IPrototype<Map>)
+public class Map : IPrototype<Map>
 {
     public int Width { get; }
     public int Height { get; }
     public TileType[][] Tiles { get; }
 
-    private Map(int width, int height, TileType[][] tiles)
+    internal Map(int width, int height, TileType[][] tiles)
     {
         Width = width;
         Height = height;
         Tiles = tiles;
+    }
+
+    // Prototype Pattern - Deep copy method
+    public Map Clone()
+    {
+        var clonedTiles = new TileType[Height][];
+        for (int y = 0; y < Height; y++)
+        {
+            clonedTiles[y] = (TileType[])Tiles[y].Clone();
+        }
+        return new Map(Width, Height, clonedTiles);
     }
 
     private class MapJson
@@ -58,11 +71,17 @@ public class Map
 
     public MapDto ToDto()
     {
+        var clonedTiles = new TileType[Height][];
+        for (int y = 0; y < Height; y++)
+        {
+            clonedTiles[y] = (TileType[])Tiles[y].Clone();
+        }
+
         return new MapDto
         {
             Width = Width,
             Height = Height,
-            Tiles = Tiles
+            Tiles = clonedTiles
         };
     }
 }
