@@ -4,6 +4,7 @@ using BombIt.Shared.Enums;
 using System.Text.Json;
 using BombIt.Server.Game.MapFactories;
 using BombIt.Server.Game.Maps.Prototypes;
+using BombIt.Server.Game.Maps.Builders;
 
 namespace BombIt.Server.Game.Models;
 
@@ -50,23 +51,9 @@ public class Map : IPrototype<Map>
             PropertyNameCaseInsensitive = true,
         }) ?? throw new InvalidOperationException("Failed to parse map JSON.");
 
-        var tiles = new TileType[raw.Height][];
-        for (int y = 0; y < raw.Height; y++)
-        {
-            tiles[y] = new TileType[raw.Width];
-            for (int x = 0; x < raw.Width; x++)
-            {
-                char c = raw.Layout[y][x];
-                tiles[y][x] = c switch
-                {
-                    '#' => TileType.Indestructible,
-                    '+' => TileType.Destructible,
-                    _ => TileType.Empty
-                };
-            }
-        }
-
-        return new Map(raw.Width, raw.Height, tiles);
+        // Builder Pattern - Director uses TileMapBuilder to construct the Map
+        var director = new MapDirector(new TileMapBuilder());
+        return director.BuildFromLayout(raw.Width, raw.Height, raw.Layout);
     }
 
     public MapDto ToDto()

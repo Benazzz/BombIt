@@ -1,17 +1,20 @@
 using BombIt.Server.Game.MapFactories.Products;
+using BombIt.Server.Game.Maps.Builders;
 using BombIt.Server.Game.Models;
 
 namespace BombIt.Server.Game.MapFactories;
 
 // Abstract Factory Pattern - Concrete Factory
-// Prototype Pattern - Client: stores a loaded Map template prototype and deep-clones it on demand
+// Builder Pattern - Client: uses MapDirector + TileMapBuilder to procedurally generate a unique map each time
 public sealed class DesertMapFactory : IMapFactory
 {
-    private readonly Map _mapPrototype = Map.LoadFromFile("desert-map.json");
+    private readonly MapDirector _director = new(new TileMapBuilder());
 
     public string Name => "Desert";
 
-    public Map CreateMap() => _mapPrototype.Clone();
+    // Builder Pattern - Procedurally constructs a new unique desert arena on every call
+    public Map CreateMap() =>
+        _director.BuildProceduralArena(15, 13, 0.65, Random.Shared);
 
     public MapTheme CreateTheme() => new DesertTheme();
 
