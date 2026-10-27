@@ -60,6 +60,14 @@ public class SignalRClient
         }
     }
 
+    public async Task StartCustomGameAsync(int rounds, int timeSeconds, MapThemeDto theme)
+    {
+        if (_connection.State == HubConnectionState.Connected)
+        {
+            await _connection.InvokeAsync("StartCustomGame", rounds, timeSeconds, theme);
+        }
+    }
+
     public async Task StopAsync()
     {
         await _connection.StopAsync();

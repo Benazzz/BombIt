@@ -59,4 +59,10 @@ public class GameHub : Hub
     {
         return Task.FromResult(_game.GetMap());
     }
+
+    public Task StartCustomGame(int rounds, int timeSeconds, MapThemeDto theme)
+    {
+        _game.StartCustomMatch(Context.ConnectionId, rounds, timeSeconds, theme);
+        return Task.CompletedTask;
+    }
 }

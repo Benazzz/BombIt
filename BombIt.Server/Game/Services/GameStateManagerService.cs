@@ -60,8 +60,8 @@ public class GameStateManagerService
     private const double MoveSpeed = 3.0;
     private const double TickInterval = 1.0 / 30.0;
     private const double PowerUpSpawnChance = 0.65;
-    private const int CountdownDurationTicks = 90;  
-    private const int RoundEndDisplayTicks = 90;    
+    private const int CountdownDurationTicks = 90;
+    private const int RoundEndDisplayTicks = 90;
     private const int MatchEndDisplayTicks = 150;
 
     public Player AddPlayer(string connectionId)
@@ -106,12 +106,12 @@ public class GameStateManagerService
         }
     }
 
-    public void StartGame(string connectionId, int rounds, int timeSeconds, string mapChoice = "Random")
-{
-    if (CurrentPhase != GamePhase.Lobby || connectionId != HostConnectionId)
-        return;
+    public void StartGame(string connectionId, int rounds, int timeSeconds, string mapChoice = "Random", IMapFactory? customFactory = null)
+    {
+        if (CurrentPhase != GamePhase.Lobby || connectionId != HostConnectionId)
+            return;
 
-        _fixedMapFactory = MapFactoryRegistry.FindByName(mapChoice); // Abstract Factory
+        _fixedMapFactory = customFactory ?? MapFactoryRegistry.FindByName(mapChoice); // Abstract Factory
         TotalRounds = Math.Clamp(rounds, 1, 10);
         _roundTimeSeconds = Math.Clamp(timeSeconds, 60, 300);
         CurrentRound = 0;

@@ -1,0 +1,59 @@
+<Window x:Class="BombIt.Client.Dialogs.CustomThemeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:BombIt.Client.Controls"
+        Title="Custom map colors"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#FF1E1E1E">
+    <StackPanel Margin="20">
+        <StackPanel Orientation="Horizontal">
+
+            <!-- Kairė: kurią spalvą keisime -->
+            <StackPanel Width="240" Margin="0,0,20,0">
+                <TextBlock Text="1. Choose what to color" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <RadioButton x:Name="SlotEmpty" Tag="0" GroupName="Slot" Checked="Slot_Checked" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="SwatchEmpty" Width="24" Height="24" BorderBrush="White" BorderThickness="1" Margin="5,0,8,0"/>
+                        <TextBlock Text="Floor" Foreground="White" Width="75" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="HexEmpty" Foreground="LightGray" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <RadioButton x:Name="SlotDestructible" Tag="1" GroupName="Slot" Checked="Slot_Checked" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="SwatchDestructible" Width="24" Height="24" BorderBrush="White" BorderThickness="1" Margin="5,0,8,0"/>
+                        <TextBlock Text="Crates" Foreground="White" Width="75" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="HexDestructible" Foreground="LightGray" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <RadioButton x:Name="SlotIndestructible" Tag="2" GroupName="Slot" Checked="Slot_Checked" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="SwatchIndestructible" Width="24" Height="24" BorderBrush="White" BorderThickness="1" Margin="5,0,8,0"/>
+                        <TextBlock Text="Walls" Foreground="White" Width="75" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="HexIndestructible" Foreground="LightGray" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+
+                <RadioButton x:Name="SlotGrid" Tag="3" GroupName="Slot" Checked="Slot_Checked" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="SwatchGrid" Width="24" Height="24" BorderBrush="White" BorderThickness="1" Margin="5,0,8,0"/>
+                        <TextBlock Text="Grid lines" Foreground="White" Width="75" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="HexGrid" Foreground="LightGray" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+            </StackPanel>
+
+            <!-- Dešinė: spalvų ratas (Adaptee) -->
+            <controls:ColorWheel x:Name="Wheel"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="OK" Width="90" Height="30" Margin="0,0,10,0" IsDefault="True" Click="Ok_Click"/>
+            <Button Content="Cancel" Width="90" Height="30" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

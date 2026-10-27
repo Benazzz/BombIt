@@ -1,6 +1,8 @@
 ﻿using BombIt.Server.Game.Services;
 using BombIt.Shared.Commands;
 using BombIt.Shared.DTOs;
+using BombIt.Server.Game.MapFactories;
+using BombIt.Server.Game.MapFactories.Products;
 
 namespace BombIt.Server.Game.Facade;
 
@@ -75,6 +77,17 @@ public class GameFacade
         {
             _state.Tick();
             return _snapshotBuilder.Build();
+        }
+    }
+
+    public void StartCustomMatch(string connectionId, int rounds, int timeSeconds, MapThemeDto theme)
+    {
+        if (!CustomTheme.TryCreate(theme, out var customTheme)) return; // netinkamas HEX -> ignoruojame
+
+        lock (_sync)
+        {
+            var factory = new CustomMapFactory(MapFactoryRegistry.Default, customTheme);
+            _state.StartGame(connectionId, rounds, timeSeconds, "Custom", factory);
         }
     }
 }

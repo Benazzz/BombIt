@@ -7,6 +7,9 @@ using BombIt.Shared.DTOs;
 using BombIt.Shared.Enums;
 using BombIt.Client.Commands;
 using BombIt.Client.Settings;
+using BombIt.Client.Dialogs;
+using System.Windows.Controls;
+
 
 namespace BombIt.Client;
 
@@ -20,6 +23,7 @@ public partial class MainWindow : Window
     // Command Pattern
     private readonly MatchSettings _matchSettings = new();
     private readonly SettingsCommandInvoker _settingsInvoker = new();
+    private MapThemeDto? _customTheme;
 
     public MainWindow()
     {
@@ -28,7 +32,7 @@ public partial class MainWindow : Window
         _signalRClient.Connected += OnConnected;
         _signalRClient.GameStateReceived += OnGameStateReceived;
         _renderer = new GameRenderer(MapCanvas);
-        MapChoiceCombo.ItemsSource = new[] { "Random", "Classic", "Desert" };
+        MapChoiceCombo.ItemsSource = new[] { "Random", "Classic", "Desert", "Custom" };
         MapChoiceCombo.SelectedIndex = 0;
         RefreshSettingsUi();
     }
@@ -56,7 +60,10 @@ public partial class MainWindow : Window
     private async void StartGameButton_Click(object sender, RoutedEventArgs e)
     {
         var mapChoice = MapChoiceCombo.SelectedItem as string ?? "Random";
-        await _signalRClient.StartGameAsync(_matchSettings.Rounds, _matchSettings.RoundTimeSeconds, mapChoice);
+        if (mapChoice == "Custom" && _customTheme != null)
+            await _signalRClient.StartCustomGameAsync(_matchSettings.Rounds, _matchSettings.RoundTimeSeconds, _customTheme);
+        else
+            await _signalRClient.StartGameAsync(_matchSettings.Rounds, _matchSettings.RoundTimeSeconds, mapChoice);
         _settingsInvoker.ClearHistory(); // Command Pattern
         RefreshSettingsUi();
     }
@@ -210,6 +217,24 @@ public partial class MainWindow : Window
 
             _renderer.DrawDynamicState(state);
         });
+    }
+
+    private void MapChoiceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        bool isCustom = MapChoiceCombo.SelectedItem as string == "Custom";
+        EditCustomColorsButton.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
+        if (isCustom) OpenCustomThemeDialog();
+    }
+
+    private void EditCustomColors_Click(object sender, RoutedEventArgs e) => OpenCustomThemeDialog();
+
+    private void OpenCustomThemeDialog()
+    {
+        var dialog = new CustomThemeDialog(_customTheme) { Owner = this };
+        if (dialog.ShowDialog() == true)
+            _customTheme = dialog.Result;
+        else if (_customTheme == null)
+            MapChoiceCombo.SelectedIndex = 0; // atšaukė pirmą kartą -> atgal į Random
     }
 
     private void UpdateMatchInfo(GameStateDto state)
