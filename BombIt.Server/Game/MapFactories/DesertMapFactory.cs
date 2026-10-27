@@ -5,10 +5,10 @@ using BombIt.Server.Game.Models;
 namespace BombIt.Server.Game.MapFactories;
 
 // Abstract Factory Pattern - Concrete Factory
-// Builder Pattern - Client: uses MapDirector + TileMapBuilder to procedurally generate a unique map each time
+// Builder Pattern - Client: uses MapDirector + ProceduralTileMapBuilder to procedurally generate a unique map each time
 public sealed class DesertMapFactory : IMapFactory
 {
-    private readonly MapDirector _director = new(new TileMapBuilder());
+    private readonly MapDirector _director = new(new ProceduralTileMapBuilder());
 
     public string Name => "Desert";
 

@@ -11,7 +11,7 @@ using BombIt.Server.Game.MapFactories.Products;
 
 namespace BombIt.Server.Game.Services;
 
-public class GameStateManagerService
+public sealed class GameStateManagerService
 {
     private IMapFactory? _fixedMapFactory; // null = atsitiktinis kiekviename raunde
     private readonly ConcurrentDictionary<string, Player> _players = new();

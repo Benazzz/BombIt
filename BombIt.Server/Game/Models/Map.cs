@@ -22,7 +22,7 @@ public class Map : IPrototype<Map>
         Tiles = tiles;
     }
 
-    // Prototype Pattern - Deep copy method
+    // Prototype Pattern - Deep copy method (for shallow copy leave return only clonedTiles-> this.Tiles)
     public Map Clone()
     {
         var clonedTiles = new TileType[Height][];
@@ -32,6 +32,28 @@ public class Map : IPrototype<Map>
         }
         return new Map(Width, Height, clonedTiles);
     }
+     // Deep copy vs shallow copy test
+    // public Map DeepClone()
+    // {
+    //     var clonedTiles = new TileType[Height][];
+    //     for (int y = 0; y < Height; y++)
+    //     {
+    //         clonedTiles[y] = (TileType[])Tiles[y].Clone();
+    //     }
+    //     return new Map(Width, Height, clonedTiles);
+    // }
+    // // Prototype Pattern - Shallow copy method
+    // public Map ShallowClone()
+    // {
+    //     // Naujas Map objektas, tačiau Tiles masyvas rodo į TĄ PATĮ atminties adresą!
+    //     return new Map(Width, Height, Tiles);
+    // }
+    // public Map Clone()
+    // {
+    //     return DeepClone(); 
+    // }
+
+  
 
     private class MapJson
     {
@@ -51,8 +73,8 @@ public class Map : IPrototype<Map>
             PropertyNameCaseInsensitive = true,
         }) ?? throw new InvalidOperationException("Failed to parse map JSON.");
 
-        // Builder Pattern - Director uses TileMapBuilder to construct the Map
-        var director = new MapDirector(new TileMapBuilder());
+        // Builder Pattern - Director uses FileTileMapBuilder to construct the Map from layout
+        var director = new MapDirector(new FileTileMapBuilder());
         return director.BuildFromLayout(raw.Width, raw.Height, raw.Layout);
     }
 

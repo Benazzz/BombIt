@@ -22,6 +22,8 @@ builder.Services.AddSingleton<GameFacade>(); // Facade Pattern
 builder.Services.AddHostedService<GameLoopService>();
 
 var app = builder.Build();
+// Thread-safety demonstraction for Singleton pattern
+BombIt.Server.Game.Services.SingletonThreadSafetyBenchmark.RunBenchmark();
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
