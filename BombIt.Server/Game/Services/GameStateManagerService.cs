@@ -8,6 +8,7 @@ using BombIt.Server.Game.Events.Observers;
 using BombIt.Server.Game.Events;
 using BombIt.Server.Game.MapFactories;
 using BombIt.Server.Game.MapFactories.Products;
+using BombIt.Server.Game.Events.Logging;
 
 namespace BombIt.Server.Game.Services;
 
@@ -27,7 +28,9 @@ public class GameStateManagerService
     private GameStateManagerService()
     {
         // Observer Pattern
-        _events.Attach(new GameEventLogger());
+        _events.Attach(new DetailedGameEventLog(new ConsoleLogSink())); //bridge
+        _events.Attach(new HighlightsGameEventLog(new FileLogSink(Path.Combine(AppContext.BaseDirectory, "Logs", "match-history.log")))); //bridge
+        //_events.Attach(new GameEventLogger());
         _events.Attach(new DeadPlayerCleanup());
         _events.Attach(_scoreBoard);
         _events.Attach(_announcer);
